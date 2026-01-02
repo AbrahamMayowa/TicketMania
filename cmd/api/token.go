@@ -24,7 +24,6 @@ type AuthClaims struct {
 func (app *application) GenerateToken(scope TokenScope, user *data.User) (string, error) {
 
 
-
 claims := AuthClaims{
 	Scope: scope,
 	Email: user.Email,

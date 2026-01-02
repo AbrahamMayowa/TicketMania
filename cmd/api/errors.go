@@ -55,3 +55,12 @@ func (app *application) invalidCredentialResponsee(w http.ResponseWriter, r *htt
 	message := "Password or email is invalid";
 	app.errorResponse(w, r, http.StatusBadRequest, message)
 }
+
+func (app *application) unauthorizedResponse(w http.ResponseWriter, r *http.Request, message string) {
+	app.errorResponse(w, r, http.StatusUnauthorized, message)
+}
+
+func (app *application) forbiddenResponse(w http.ResponseWriter, r *http.Request) {
+	message := "you do not have permission to access this resource"
+	app.errorResponse(w, r, http.StatusForbidden, message)
+}

@@ -6,10 +6,14 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func (app *application) router() *httprouter.Router {
+func (app *application) router() http.Handler {
 	router := httprouter.New()
 
 	router.HandlerFunc(http.MethodPost, "/v1/register", app.registerUserHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/login", app.LoginUserHandler)
-	return router
+	router.HandlerFunc(http.MethodPost, "/v1/create-event", app.createEventHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/events", app.listEventsHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/events/:id", app.getEventHandler)
+
+	return app.authenticate(router)
 }

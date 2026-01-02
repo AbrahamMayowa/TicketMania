@@ -10,12 +10,16 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var AnonymousUser = &User{}
+
+
 type User struct {
 	Id int64 `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	Email string `json:"email"`
 	Password password `json:"-"`
 	Version int32 `json:"version"`
+	Scope string `json:"scope,omitempty"`
 }
 
 type password struct {
@@ -85,6 +89,12 @@ func ValidateUser(v *validator.Validator, user *User) {
 	v.Check(validator.Matches(user.Email, validator.EmailRegex), "email", "must be a valid email address")
 	v.Check(user.Password.Plaintext != nil, "password", "must be provided")
 }
+
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
+}
+
+
 
 
 

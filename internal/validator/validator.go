@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strings"
 	"unicode"
+	"time"
+	"errors"
 )
 
 var (
@@ -66,4 +68,31 @@ func ValidatePassword(pw string) bool {
 	}
 
 	return hasUpper && hasNumber && hasSpecial
+}
+
+
+func ParseTime(t string) (time.Time, error) {
+	if t == "" {
+		return time.Time{}, errors.New("time is required")
+	}
+
+	parsed, err := time.Parse("15:04", t)
+	if err != nil {
+		return time.Time{}, errors.New("invalid time format, expected HH:MM")
+	}
+
+	return parsed, nil
+}
+
+func ParseDate(d string) (time.Time, error) {
+	if d == "" {
+		return time.Time{}, errors.New("date is required")
+	}
+
+	parsed, err := time.Parse("2006-01-02", d)
+	if err != nil {
+		return time.Time{}, errors.New("invalid date format, expected YYYY-MM-DD")
+	}
+
+	return parsed, nil
 }
