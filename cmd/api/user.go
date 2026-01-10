@@ -78,7 +78,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 
 func (app *application) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Email string `json:"email"`
+		Email    string  `json:"email"`
 		Password *string `json:"password"`
 	}
 
@@ -86,7 +86,7 @@ func (app *application) LoginUserHandler(w http.ResponseWriter, r *http.Request)
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
-		return;
+		return
 	}
 
 	v := validator.New()
@@ -99,7 +99,7 @@ func (app *application) LoginUserHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	user, err := app.models.Users.GetByEmail(input.Email);
+	user, err := app.models.Users.GetByEmail(input.Email)
 
 	if err != nil {
 		switch {
@@ -119,8 +119,8 @@ func (app *application) LoginUserHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	if !isValidPassword {
-		app.invalidCredentialResponsee(w, r);
-		return;
+		app.invalidCredentialResponsee(w, r)
+		return
 	}
 
 	token, err := app.GenerateToken(ScopeAuthentication, user)
@@ -138,5 +138,3 @@ func (app *application) LoginUserHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 }
-
-

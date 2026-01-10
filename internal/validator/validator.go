@@ -1,25 +1,23 @@
 package validator
 
 import (
+	"errors"
 	"log"
 	"regexp"
 	"strings"
-	"unicode"
 	"time"
-	"errors"
+	"unicode"
 )
 
 var (
-	EmailRegex    = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)	
+	EmailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 )
 
-
 type Validator struct {
-	Errors map[string]string;
+	Errors map[string]string
 }
 
-
-func New() *Validator{
+func New() *Validator {
 	return &Validator{
 		Errors: make(map[string]string),
 	}
@@ -42,8 +40,7 @@ func (v *Validator) Check(ok bool, key, message string) {
 	}
 }
 
-
-func Matches(value string, rx *regexp.Regexp) bool { 
+func Matches(value string, rx *regexp.Regexp) bool {
 	return rx.MatchString(value)
 }
 
@@ -69,7 +66,6 @@ func ValidatePassword(pw string) bool {
 
 	return hasUpper && hasNumber && hasSpecial
 }
-
 
 func ParseTime(t string) (time.Time, error) {
 	if t == "" {

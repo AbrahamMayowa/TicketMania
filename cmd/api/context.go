@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"net/http"
 	"github.com/AbrahamMayowa/ticketmania/internal/data"
+	"net/http"
 )
 
 type contextKey string

@@ -109,7 +109,7 @@ func (app *application) getEventHandler(w http.ResponseWriter, r *http.Request) 
 func (app *application) listEventsHandler(w http.ResponseWriter, r *http.Request) {
 	qs := r.URL.Query()
 
-	perPage := app.readInt(qs, "per_page", 20)
+	perPage := app.readInt(qs, "limit", 20)
 	page := app.readInt(qs, "page", 1)
 	offset := (page - 1) * perPage
 

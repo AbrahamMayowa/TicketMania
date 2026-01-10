@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"github.com/AbrahamMayowa/ticketmania/internal/validator"
 	"math"
 	"time"
-	"github.com/AbrahamMayowa/ticketmania/internal/validator"
 )
 
 type EventStatus string
@@ -30,7 +30,7 @@ type Event struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 
-	Location  string    `json:"location"`
+	Location  string `json:"location"`
 	StartTime string `json:"start_time"`
 	EndTime   string `json:"end_time"`
 
@@ -104,7 +104,7 @@ type PaginationMeta struct {
 
 type EventListResponse struct {
 	Data []*EventWithTicketTypes `json:"data"`
-	Meta PaginationMeta         `json:"meta"`
+	Meta PaginationMeta          `json:"meta"`
 }
 
 func validateTimeRange(start, end string) bool {
@@ -255,7 +255,7 @@ func (m EventModel) GetWithTicketTypes(ctx context.Context, eventID int64) (*Eve
 
 	for rows.Next() {
 		var e Event
-		tt  := &TicketType{}
+		tt := &TicketType{}
 
 		err := rows.Scan(
 			&e.ID,

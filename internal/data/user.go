@@ -12,14 +12,13 @@ import (
 
 var AnonymousUser = &User{}
 
-
 type User struct {
-	Id int64 `json:"id"`
+	Id        int64     `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
-	Email string `json:"email"`
-	Password password `json:"-"`
-	Version int32 `json:"version"`
-	Scope string `json:"scope,omitempty"`
+	Email     string    `json:"email"`
+	Password  password  `json:"-"`
+	Version   int32     `json:"version"`
+	Scope     string    `json:"scope,omitempty"`
 }
 
 type password struct {
@@ -27,12 +26,9 @@ type password struct {
 	Hash      []byte
 }
 
-
 type UserModel struct {
 	DB *sql.DB
 }
-
-
 
 func (p *password) Set(plaintextPassword string) error {
 
@@ -56,13 +52,12 @@ func (p *password) Matches(plaintextPassword string) (bool, error) {
 	return true, nil
 }
 
-
 func (u UserModel) Insert(user *User) error {
 	userData := []interface{}{user.Email, user.Password.Hash}
 	query := `INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, created_at, email, version`
 	err := u.DB.QueryRow(query, userData...).Scan(&user.Id, &user.CreatedAt, &user.Email, &user.Version)
 	if err != nil {
-	if pgErr, ok := err.(*pq.Error); ok {
+		if pgErr, ok := err.(*pq.Error); ok {
 			if pgErr.Code == "23505" {
 				return ErrUserAlreadyExists
 			}
@@ -93,10 +88,3 @@ func ValidateUser(v *validator.Validator, user *User) {
 func (u *User) IsAnonymous() bool {
 	return u == AnonymousUser
 }
-
-
-
-
-
-
-
