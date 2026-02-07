@@ -34,7 +34,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 
 	err = user.Password.Set(input.Password)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		app.serverErrorResponse(w, r, err, input)
 		return
 	}
 
@@ -48,12 +48,13 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 
 	switch {
 	case err == nil:
-		app.conflictResponse(w, r, nil, "A user with this email address already exists")
+		err = errors.New("User already exist")
+		app.conflictResponse(w, r, err, "A user with this email address already exists")
 		return
 	case errors.Is(err, data.ErrRecordNotFound):
 		// user does NOT exist continue
 	default:
-		app.serverErrorResponse(w, r, err)
+		app.serverErrorResponse(w, r, err, input)
 		return
 	}
 
@@ -63,10 +64,19 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		case errors.Is(err, data.ErrUserAlreadyExists):
 			app.conflictResponse(w, r, err, "A user with this email address already exists")
 		default:
-			app.serverErrorResponse(w, r, err)
+			app.serverErrorResponse(w, r, err, input)
 		}
 		return
 	}
+
+	// handle welcome mail
+	app.background(func() {
+		app.logger.PrintInfo("sending welcome email", map[string]string{"email": input.Email, "template": "user_welcome.tmpl"})
+		err = app.mailer.Send([]string{input.Email}, "user_welcome.tmpl", map[string]string{"loginURL": "https://ticketmania.com/login"})
+		if err != nil {
+			app.logger.PrintError(err, map[string]string{"email": input.Email, "template": "user_welcome.tmpl"})
+		}
+	})
 
 	env := envelope{"data": user}
 	err = app.writeJSON(w, http.StatusOK, env, nil)
@@ -106,7 +116,7 @@ func (app *application) LoginUserHandler(w http.ResponseWriter, r *http.Request)
 		case errors.Is(err, data.ErrRecordNotFound):
 			app.invalidCredentialResponsee(w, r)
 		default:
-			app.serverErrorResponse(w, r, err)
+			app.serverErrorResponse(w, r, err, input)
 		}
 		return
 	}

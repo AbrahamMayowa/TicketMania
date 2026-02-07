@@ -13,7 +13,7 @@ import (
 var AnonymousUser = &User{}
 
 type User struct {
-	Id        int64     `json:"id"`
+	Id        *int64     `json:"id,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 	Email     string    `json:"email"`
 	Password  password  `json:"-"`

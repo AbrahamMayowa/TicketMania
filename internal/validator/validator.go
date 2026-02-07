@@ -2,7 +2,6 @@ package validator
 
 import (
 	"errors"
-	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -34,7 +33,6 @@ func (v *Validator) AddError(key, message string) {
 }
 
 func (v *Validator) Check(ok bool, key, message string) {
-	log.Print("Validator Check: ", ok, " key: ", key)
 	if !ok {
 		v.AddError(key, message)
 	}

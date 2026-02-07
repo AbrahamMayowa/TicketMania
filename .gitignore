@@ -1,3 +1,6 @@
 .env
 vendor
 bin/
+tmp
+.air.toml
+.DS_Store

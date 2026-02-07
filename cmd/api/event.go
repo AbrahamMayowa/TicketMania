@@ -2,9 +2,12 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/AbrahamMayowa/ticketmania/internal/data"
 	"github.com/AbrahamMayowa/ticketmania/internal/validator"
-	"net/http"
 )
 
 func (app *application) createEventHandler(w http.ResponseWriter, r *http.Request) {
@@ -16,7 +19,7 @@ func (app *application) createEventHandler(w http.ResponseWriter, r *http.Reques
 		Location    string `json:"location"`
 		Date        string `json:"date"`
 		StartTime   string `json:"start_time"`
-		EndTime     string `json:"end_time"`
+		EndTime     string `json:"end_time"`	
 		TicketTypes []struct {
 			Name     string `json:"name"`
 			Price    int64  `json:"price"`
@@ -26,6 +29,7 @@ func (app *application) createEventHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	err := app.readJSON(w, r, &input)
+	fmt.Println(input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
@@ -46,9 +50,11 @@ func (app *application) createEventHandler(w http.ResponseWriter, r *http.Reques
 		Title:       input.Title,
 		Description: input.Description,
 		Location:    input.Location,
-		UserID:      user.Id,
-		Status:      data.EventDraft,
+		UserID:      *user.Id,
+		Status:      data.EventPublished	,
 		Date:        parsedDate,
+		StartTime: input.StartTime,
+		EndTime: input.EndTime,
 	}
 
 	v := validator.New()
@@ -74,8 +80,16 @@ func (app *application) createEventHandler(w http.ResponseWriter, r *http.Reques
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
+	
 
+	app.logger.PrintInfo("create ticket event", map[string]string{"event": event.Title, "user": strconv.FormatInt(*user.Id, 10)})
 	err = app.models.Events.InsertEvent(event, ticketTypes)
+	if err != nil {
+		app.serverErrorResponse(w, r, err, input)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"data": event}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -91,13 +105,15 @@ func (app *application) getEventHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	event, err := app.models.Events.GetWithTicketTypes(r.Context(), id)
+	if err != nil {
 	switch {
 	case errors.Is(err, data.ErrRecordNotFound):
 		app.notFoundResponse(w, r)
 		return
-	case err != nil:
+	default:
 		app.serverErrorResponse(w, r, err)
 		return
+	}
 	}
 	err = app.writeJSON(w, http.StatusOK, envelope{"data": event}, nil)
 	if err != nil {
@@ -115,8 +131,15 @@ func (app *application) listEventsHandler(w http.ResponseWriter, r *http.Request
 
 	events, err := app.models.Events.GetEventList(r.Context(), perPage, offset)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w,r)
+			return; 
+		default:
+			app.serverErrorResponse(w, r, err, map[string]string{"page": strconv.Itoa(perPage), "offset": strconv.Itoa(offset)})
+			return
+		}
+		
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"event": events}, nil)

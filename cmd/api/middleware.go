@@ -31,7 +31,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		}
 
 		user := &data.User{
-			Id:    claims.Id,
+			Id:    &claims.Id,
 			Email: claims.Email,
 			Scope: string(claims.Scope),
 		}

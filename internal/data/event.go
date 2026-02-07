@@ -4,25 +4,21 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"github.com/AbrahamMayowa/ticketmania/internal/validator"
+	"errors"
+	"fmt"
 	"math"
 	"time"
+
+	"github.com/AbrahamMayowa/ticketmania/internal/validator"
 )
 
 type EventStatus string
-type TicketStatus string
 
 const (
 	EventDraft     EventStatus = "draft"
 	EventPublished EventStatus = "published"
 	EventCancelled EventStatus = "cancelled"
 	EventCompleted EventStatus = "completed"
-
-	TicketAvailable TicketStatus = "available"
-	TicketReserved  TicketStatus = "reserved"
-	TicketPaid      TicketStatus = "paid"
-	TicketCancelled TicketStatus = "cancelled"
-	TicketUsed      TicketStatus = "used"
 )
 
 type Event struct {
@@ -60,23 +56,7 @@ type TicketType struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type Ticket struct {
-	ID           int64 `json:"id"`
-	EventID      int64 `json:"event_id"`
-	TicketTypeID int64 `json:"ticket_type_id"`
 
-	UserID *int64 `json:"user_id,omitempty"`
-
-	Status TicketStatus `json:"status"`
-
-	PaidAt *time.Time `json:"paid_at,omitempty"`
-	UsedAt *time.Time `json:"used_at,omitempty"`
-
-	CreatedAt time.Time `json:"created_at"`
-
-	BuyerEmail string `json:"buyer_email"`
-	BuyerPhone string `json:"buyer_phone"`
-}
 
 type EventModel struct {
 	DB *sql.DB
@@ -86,9 +66,7 @@ type TicketTypeModel struct {
 	DB *sql.DB
 }
 
-type TicketModel struct {
-	DB *sql.DB
-}
+
 
 type EventWithTicketTypes struct {
 	Event       Event         `json:"event"`
@@ -242,7 +220,7 @@ func (m EventModel) GetWithTicketTypes(ctx context.Context, eventID int64) (*Eve
 	rows, err := m.DB.QueryContext(ctx, query, eventID)
 	if err != nil {
 		switch {
-		case err == sql.ErrNoRows:
+		case errors.Is(err, sql.ErrNoRows):
 			return nil, ErrRecordNotFound
 		default:
 			return nil, err
@@ -298,7 +276,7 @@ func (m EventModel) GetWithTicketTypes(ctx context.Context, eventID int64) (*Eve
 	}
 
 	if event == nil {
-		return nil, sql.ErrNoRows
+		return nil, ErrRecordNotFound
 	}
 
 	return &EventWithTicketTypes{
@@ -336,7 +314,6 @@ func (m EventModel) GetEventList(ctx context.Context, perPage int,
 				) ORDER BY tt.id
 			) FILTER (WHERE
 				tt.id IS NOT NULL
-				AND now() BETWEEN tt.sales_start AND tt.sales_end
 				AND tt.total_qty > tt.sold_qty
 			),
 			'[]'
@@ -347,7 +324,6 @@ func (m EventModel) GetEventList(ctx context.Context, perPage int,
 	  AND EXISTS (
 	      SELECT 1 FROM ticket_types tt2
 	      WHERE tt2.event_id = e.id
-	        AND now() BETWEEN tt2.sales_start AND tt2.sales_end
 	        AND tt2.total_qty > tt2.sold_qty
 	  )
 	GROUP BY e.id
@@ -362,7 +338,6 @@ func (m EventModel) GetEventList(ctx context.Context, perPage int,
 		  AND EXISTS (
 		      SELECT 1 FROM ticket_types tt
 		      WHERE tt.event_id = e.id
-		        AND now() BETWEEN tt.sales_start AND tt.sales_end
 		        AND tt.total_qty > tt.sold_qty
 		  )
 	`
@@ -370,7 +345,11 @@ func (m EventModel) GetEventList(ctx context.Context, perPage int,
 	// Execute count query first
 	var totalEvents int
 	err := m.DB.QueryRowContext(ctx, countQuery).Scan(&totalEvents)
+	fmt.Printf("ticketType: %+v\n", err)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrRecordNotFound
+		}
 		return nil, err
 	}
 

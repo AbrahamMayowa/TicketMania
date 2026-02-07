@@ -25,7 +25,7 @@ func (app *application) GenerateToken(scope TokenScope, user *data.User) (string
 	claims := AuthClaims{
 		Scope: scope,
 		Email: user.Email,
-		Id:    user.Id,
+		Id:    *user.Id,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "github.com/AbrahamMayowa/ticketmania",
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),

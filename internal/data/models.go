@@ -8,6 +8,8 @@ import (
 var (
 	ErrRecordNotFound    = errors.New("Record not found")
 	ErrUserAlreadyExists = errors.New("User with given email already exists")
+	ErrTicketNotAvailable = errors.New("no tickets available for this ticket type")
+	ErrTicketNotFound = errors.New("Ticket or event not found")
 )
 
 type Models struct {
